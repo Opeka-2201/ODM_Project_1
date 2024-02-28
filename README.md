@@ -1,8 +1,8 @@
 # INFO8003-1: Optimal Decision Making for Complex Problems
 ## Project 1: Reinforcement Learning in a Discrete Domain
-### Authors: Romain LAMBERMONT (s190931), Arthur LOUIS (S191230)
+### Authors: Romain LAMBERMONT, Arthur LOUIS
 
-This project is part of the course of Optimal Decision Making for Complex Problems at the University of Liège. The course is given by Prof. Damien Ernst with the help of his teaching assistants Arthur Louette and Bardhyl Miftari. The goal of this project is to implement a reinforcement learning algorithm in a discrete domain, a matrix where each cell reached by the agent returns a reward. The report can be seen [here](./report/report.pdf).
+This project is part of the course of Optimal Decision Making for Complex Problems at the University of Liège. The course is given by Prof. Damien Ernst with the help of his teaching assistants Arthur Louette and Bardhyl Miftari. The goal of this project is to implement a reinforcement learning agent in a discrete domain, a matrix where each cell reached by the agent returns a reward. The statement can be seen [here](./documents/Statement.pdf) and the report can be seen [here](./report/report.pdf).
 
 <div align="center">
     <img src="./figures/matrix.png" alt="Matrix">
