@@ -1,7 +1,7 @@
 # INFO8003-1: Optimal Decision Making for Complex Problems
 # Project 1: Reinforcement Learning in a Discrete Domain
 # Authors: Romain LAMBERMONT, Arthur LOUIS
-# Section 1: Implementation of the domain
+# Section 2: Expected return of a policy
 
 ## IMPORTS ##
 import random
@@ -19,7 +19,7 @@ REWARDS = np.matrix([
 ])
 ACTIONS_ALLOWED = [(1,0), (-1,0), (0,1), (0,-1)]
 GAMMA = 0.99
-N = 50
+N = 10000
 N_RUNS_STOCHASTIC = 10
 PROB_STOCHASTIC = 0.5
 
@@ -42,8 +42,29 @@ class domain:
     def reward(self, visited):
         return self.rewards[visited[0], visited[1]]
     
-    def function_j(self, state, agent, N):
-        pass
+    def function_j(self, agent, N, N_runs):
+        lines = self.nb_lines
+        columns = self.nb_columns
+        J = np.zeros((lines, columns))
+
+        print("Computing J for domain:", "stochastic" if self.bool_stochastic else "deterministic")
+        for _ in tqdm(range(N_runs)):
+            J_run = np.zeros((lines, columns))
+            for _ in range(N):
+                J_new = np.zeros((lines, columns))
+                
+                for i in range(lines):
+                    for j in range(columns):
+                        state = self.dynamic((i,j), agent.chose_action(), lines, columns)
+                        if self.bool_stochastic:
+                            J_new[i,j] = self.prob_stochastic * (self.reward(state) + self.gamma * J_run[state[0], state[1]]) + \
+                                         (1 - self.prob_stochastic) * (self.reward((0,0)) + self.gamma * J_run[0,0])
+                        else:
+                            J_new[i,j] = self.reward(state) + self.gamma * J_run[state[0], state[1]]
+
+                J_run = J_new
+            J += J_run / N_runs
+        return J
         
     @staticmethod
     def dynamic(state, action, nb_lines, nb_columns):
@@ -55,17 +76,8 @@ def main():
     det_dm = domain(REWARDS, GAMMA, False)
     sto_dm = domain(REWARDS, GAMMA, True, PROB_STOCHASTIC)
 
-    j_det = np.zeros(REWARDS.shape)
-    j_sto = np.zeros(REWARDS.shape)
-
-    for i in tqdm(range(REWARDS.shape[0])):
-        for j in range(REWARDS.shape[1]):
-            j_det[i, j] = det_dm.function_j((i, j), ag, N)
-            
-            for _ in range(N_RUNS_STOCHASTIC):
-                j_sto[i, j] += sto_dm.function_j((i, j), ag, N)
-
-    j_sto = j_sto / N_RUNS_STOCHASTIC
+    j_det = det_dm.function_j(ag, N, N_RUNS_STOCHASTIC) # normalizing because of the random nature of the agent
+    j_sto = sto_dm.function_j(ag, N, N_RUNS_STOCHASTIC)
 
     _, axs = plt.subplots(1, 2, figsize=(10, 5))
     axs[0].imshow(j_det, cmap="viridis", interpolation="nearest")
