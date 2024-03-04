@@ -1,7 +1,7 @@
 # INFO8003-1: Optimal Decision Making for Complex Problems
 # Project 1: Reinforcement Learning in a Discrete Domain
 # Authors: Romain LAMBERMONT, Arthur LOUIS
-# Section 2: Optimal policy
+# Section 3: Optimal policy
 
 ## IMPORTS ##
 import numpy as np
