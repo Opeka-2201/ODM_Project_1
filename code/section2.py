@@ -115,7 +115,7 @@ def main():
             _ = axs[1].text(j, i, f'{j_sto_mean[i, j]:.2f}', ha="center", va="center", color="black")
     
     plt.suptitle("$\mu$ of $J^\mu_N$ for $N = " + str(N) + "$ and $N_{runs} = " + str(N_RUNS_STOCHASTIC) + "$")
-    plt.show()
+    plt.savefig("figures/j_mu_mean.png")
 
     _, axs = plt.subplots(1, 2, figsize=(10, 5))
     axs[0].imshow(j_det_std, cmap="viridis", interpolation="nearest")
@@ -145,7 +145,7 @@ def main():
             _ = axs[1].text(j, i, f'{j_sto_std[i, j]:.2f}', ha="center", va="center", color="black")
     
     plt.suptitle("$\sigma$ of $J^\mu_N$ for $N = " + str(N) + "$ and $N_{runs} = " + str(N_RUNS_STOCHASTIC) + "$")
-    plt.show()
+    plt.savefig("figures/j_mu_std.png")
 
 if __name__ == "__main__":
     main()

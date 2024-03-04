@@ -92,7 +92,7 @@ class MDP:
         p_sp_s_a = self.p_sp_s_a(state_prime, state, action)
         reward_function = p_sp_s_a * max(Q_u[state_prime[0], state_prime[1]], Q_d[state_prime[0], state_prime[1]], Q_r[state_prime[0], state_prime[1]], Q_l[state_prime[0], state_prime[1]])
 
-        if p_sp_s_a < 1 and self.stochas:
+        if p_sp_s_a < 1 and self.stochastic_behavior:
             p_stoch = self.p_sp_s_a((0, 0), state, action)
             reward_function += p_stoch * max(Q_u[0, 0], Q_d[0, 0], Q_r[0, 0], Q_l[0, 0])
 
@@ -187,7 +187,7 @@ def main():
             _ = axs[1].text(j, i, f'{j_sto[i, j]:.2f}', ha="center", va="center", color="black")
     
     plt.suptitle("$J^\mu_N$ for $N = " + str(N) + "$ and $N_{runs} = " + str(N_RUNS_STOCHASTIC) + "$")
-    plt.show()
+    plt.savefig("figures/j_mu_star.png")
 
 if __name__ == "__main__":
     main()
