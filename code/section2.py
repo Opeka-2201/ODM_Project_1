@@ -110,7 +110,7 @@ def main():
         for j in range(j_sto_mean.shape[1]):
             _ = axs[1].text(j, i, f'{j_sto_mean[i, j]:.2f}', ha="center", va="center", color="black")
     
-    plt.suptitle("$J^\mu_N$ for $N = " + str(N) + "$ and $N_{runs} = " + str(N_RUNS_STOCHASTIC) + "$")
+    plt.suptitle("$\mu$ of $J^\mu_N$ for $N = " + str(N) + "$ and $N_{runs} = " + str(N_RUNS_STOCHASTIC) + "$")
     plt.show()
 
     _, axs = plt.subplots(1, 2, figsize=(10, 5))
@@ -140,7 +140,7 @@ def main():
         for j in range(j_sto_std.shape[1]):
             _ = axs[1].text(j, i, f'{j_sto_std[i, j]:.2f}', ha="center", va="center", color="black")
     
-    plt.suptitle("$J^\sigma_N$ for $N = " + str(N) + "$ and $N_{runs} = " + str(N_RUNS_STOCHASTIC) + "$")
+    plt.suptitle("$\sigma$ of $J^\mu_N$ for $N = " + str(N) + "$ and $N_{runs} = " + str(N_RUNS_STOCHASTIC) + "$")
     plt.show()
 
 if __name__ == "__main__":
