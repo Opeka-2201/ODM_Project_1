@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+
 # Initialize the estimates
 br = np.zeros((n_states, n_actions))
 bp = np.zeros((n_states, n_actions, n_states))
