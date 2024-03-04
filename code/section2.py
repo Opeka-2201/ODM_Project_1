@@ -29,6 +29,7 @@ class agent:
         self.actions_allowed = actions_allowed
 
     def chose_action(self):
+        # Once again the agent will simply choose a random action
         return random.choice(self.actions_allowed)
     
 class domain:
@@ -40,9 +41,11 @@ class domain:
         self.prob_stochastic = prob_stochastic
     
     def reward(self, visited):
+        # The reward is the value of the visited cell
         return self.rewards[visited[0], visited[1]]
     
     def function_j(self, agent, N, N_runs, mean = False):
+        # Computation of the expected return of the rule-based policy starting from N = 0
         lines = self.nb_lines
         columns = self.nb_columns
         J = np.zeros((N_runs, lines, columns))
@@ -51,10 +54,12 @@ class domain:
         for k in tqdm(range(N_runs)):
             J_run = np.zeros((lines, columns))
             for _ in range(N):
+                # For each N we will compute the expected return of the rule-based policy using the previous J
                 J_new = np.zeros((lines, columns))
                 
                 for i in range(lines):
                     for j in range(columns):
+                        # For each state we will compute the expected return of the rule-based policy
                         state = self.dynamic((i,j), agent.chose_action(), lines, columns)
                         if self.bool_stochastic:
                             J_new[i,j] = self.prob_stochastic * (self.reward(state) + self.gamma * J_run[state[0], state[1]]) + \
@@ -71,6 +76,7 @@ class domain:
         
     @staticmethod
     def dynamic(state, action, nb_lines, nb_columns):
+        # The dynamic of the domain when it is deterministic
         return (min(max(state[0] + action[0], 0), nb_lines - 1), min(max(state[1] + action[1], 0), nb_columns - 1))
     
 ## MAIN ##
