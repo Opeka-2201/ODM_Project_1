@@ -45,10 +45,10 @@ class domain:
     def function_j(self, agent, N, N_runs):
         lines = self.nb_lines
         columns = self.nb_columns
-        J = np.zeros((lines, columns))
+        J = np.zeros((N_runs, lines, columns))
 
         print("Computing J for domain:", "stochastic" if self.bool_stochastic else "deterministic")
-        for _ in tqdm(range(N_runs)):
+        for i in tqdm(range(N_runs)):
             J_run = np.zeros((lines, columns))
             for _ in range(N):
                 J_new = np.zeros((lines, columns))
@@ -63,7 +63,7 @@ class domain:
                             J_new[i,j] = self.reward(state) + self.gamma * J_run[state[0], state[1]]
 
                 J_run = J_new
-            J += J_run / N_runs
+            J[i] = J_run
         return J
         
     @staticmethod
@@ -77,36 +77,70 @@ def main():
     sto_dm = domain(REWARDS, GAMMA, True, PROB_STOCHASTIC)
 
     j_det = det_dm.function_j(ag, N, N_RUNS_STOCHASTIC) # normalizing because of the random nature of the agent
+    j_det_mean = np.mean(j_det, axis=0)
+    j_det_std = np.std(j_det, axis=0)
     j_sto = sto_dm.function_j(ag, N, N_RUNS_STOCHASTIC)
+    j_sto_mean = np.mean(j_sto, axis=0)
+    j_sto_std = np.std(j_sto, axis=0)
 
     _, axs = plt.subplots(1, 2, figsize=(10, 5))
-    axs[0].imshow(j_det, cmap="viridis", interpolation="nearest")
+    axs[0].imshow(j_det_mean, cmap="viridis", interpolation="nearest")
     axs[0].set_title("Deterministic domain")
     axs[0].set_xlabel("Columns")
     axs[0].set_ylabel("Rows")
-    axs[0].set_xticks(np.arange(j_det.shape[1]))
-    axs[0].set_yticks(np.arange(j_det.shape[0]))
-    axs[0].set_xticklabels(np.arange(j_det.shape[1]))
-    axs[0].set_yticklabels(np.arange(j_det.shape[0]))
+    axs[0].set_xticks(np.arange(j_det_mean.shape[1]))
+    axs[0].set_yticks(np.arange(j_det_mean.shape[0]))
+    axs[0].set_xticklabels(np.arange(j_det_mean.shape[1]))
+    axs[0].set_yticklabels(np.arange(j_det_mean.shape[0]))
     
-    for i in range(j_det.shape[0]):
-        for j in range(j_det.shape[1]):
-            _ = axs[0].text(j, i, f'{j_det[i, j]:.2f}', ha="center", va="center", color="black")
+    for i in range(j_det_mean.shape[0]):
+        for j in range(j_det_mean.shape[1]):
+            _ = axs[0].text(j, i, f'{j_det_mean[i, j]:.2f}', ha="center", va="center", color="black")
     
-    axs[1].imshow(j_sto, cmap="viridis", interpolation="nearest")
+    axs[1].imshow(j_sto_std, cmap="viridis", interpolation="nearest")
     axs[1].set_title("Stochastic domain")
     axs[1].set_xlabel("Columns")
     axs[1].set_ylabel("Rows")
-    axs[1].set_xticks(np.arange(j_sto.shape[1]))
-    axs[1].set_yticks(np.arange(j_sto.shape[0]))
-    axs[1].set_xticklabels(np.arange(j_sto.shape[1]))
-    axs[1].set_yticklabels(np.arange(j_sto.shape[0]))
+    axs[1].set_xticks(np.arange(j_sto_mean.shape[1]))
+    axs[1].set_yticks(np.arange(j_sto_mean.shape[0]))
+    axs[1].set_xticklabels(np.arange(j_sto_mean.shape[1]))
+    axs[1].set_yticklabels(np.arange(j_sto_mean.shape[0]))
     
-    for i in range(j_sto.shape[0]):
-        for j in range(j_sto.shape[1]):
-            _ = axs[1].text(j, i, f'{j_sto[i, j]:.2f}', ha="center", va="center", color="black")
+    for i in range(j_sto_mean.shape[0]):
+        for j in range(j_sto_mean.shape[1]):
+            _ = axs[1].text(j, i, f'{j_sto_mean[i, j]:.2f}', ha="center", va="center", color="black")
     
     plt.suptitle("$J^\mu_N$ for $N = " + str(N) + "$ and $N_{runs} = " + str(N_RUNS_STOCHASTIC) + "$")
+    plt.show()
+
+    _, axs = plt.subplots(1, 2, figsize=(10, 5))
+    axs[0].imshow(j_det_std, cmap="viridis", interpolation="nearest")
+    axs[0].set_title("Deterministic domain")
+    axs[0].set_xlabel("Columns")
+    axs[0].set_ylabel("Rows")
+    axs[0].set_xticks(np.arange(j_det_std.shape[1]))
+    axs[0].set_yticks(np.arange(j_det_std.shape[0]))
+    axs[0].set_xticklabels(np.arange(j_det_std.shape[1]))
+    axs[0].set_yticklabels(np.arange(j_det_std.shape[0]))
+    
+    for i in range(j_det_std.shape[0]):
+        for j in range(j_det_std.shape[1]):
+            _ = axs[0].text(j, i, f'{j_det_std[i, j]:.2f}', ha="center", va="center", color="black")
+    
+    axs[1].imshow(j_sto_std, cmap="viridis", interpolation="nearest")
+    axs[1].set_title("Stochastic domain")
+    axs[1].set_xlabel("Columns")
+    axs[1].set_ylabel("Rows")
+    axs[1].set_xticks(np.arange(j_sto_std.shape[1]))
+    axs[1].set_yticks(np.arange(j_sto_std.shape[0]))
+    axs[1].set_xticklabels(np.arange(j_sto_std.shape[1]))
+    axs[1].set_yticklabels(np.arange(j_sto_std.shape[0]))
+    
+    for i in range(j_sto_std.shape[0]):
+        for j in range(j_sto_std.shape[1]):
+            _ = axs[1].text(j, i, f'{j_sto_std[i, j]:.2f}', ha="center", va="center", color="black")
+    
+    plt.suptitle("$J^\sigma_N$ for $N = " + str(N) + "$ and $N_{runs} = " + str(N_RUNS_STOCHASTIC) + "$")
     plt.show()
 
 if __name__ == "__main__":
