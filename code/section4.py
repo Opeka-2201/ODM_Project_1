@@ -1,7 +1,7 @@
 # INFO8003-1: Optimal Decision Making for Complex Problems
 # Project 1: Reinforcement Learning in a Discrete Domain
 # Authors: Romain LAMBERMONT, Arthur LOUIS
-# Section 3: Optimal policy
+# Section 4 System Identification: 
 
 ## IMPORTS ##
 import numpy as np
@@ -12,11 +12,37 @@ import matplotlib.pyplot as plt
 from section3 import MDP, REWARDS, ACTIONS_ALLOWED, TRANSLATION, GAMMA, N, NB_LINES, NB_COLUMNS, PROB_STOCHASTIC, N_ITERATIONS, transition, translater_tuple_action
 from section2 import domain, agent
 
-det_dom = domain(False)
-sto_dom = domain(True)
+N_ITERATIONS = 10 #to estimate the Q function
+
+## DERIVED CONSTANTS ##
+
+det_dom = domain(REWARDS, GAMMA, False)
+sto_dom = domain(REWARDS, GAMMA, True)
+
+det_mdp = MDP(False)
+sto_mdp = MDP(True)
+
+det_mdp.compute_Q(N_ITERATIONS)
+sto_mdp.compute_Q(N_ITERATIONS)
+
+
+# dict to convert the action tuple to an index, usefull in the p and r estimation
+dict_actions = {(1,0): 0, (-1,0): 1, (0,1): 2, (0,-1): 3}
+
+
 
 def compute_trajectory(domain, agent, N):
-    #return list of tuples (state, action, reward,next_state)
+    """
+    Computes the trajectory of an agent in a given domain.
+
+    Args:
+        domain (Domain): The domain in which the agent operates.
+        agent (Agent): The agent that takes actions in the domain.
+        N (int): The number of steps in the trajectory.
+
+    Returns:
+        list: A list of tuples representing the trajectory. Each tuple contains the state, action, reward, and next state at a given step.
+    """
     lines = domain.nb_lines
     columns = domain.nb_columns
     trajectory = []
@@ -29,109 +55,166 @@ def compute_trajectory(domain, agent, N):
         state = next_state
     return trajectory
 
-def compute_J(domain, agent, N, N_runs):
-    return domain.function_j(agent, N, N_runs, mean = True)
 
-
-def traj_to_dict(trajectory):
-    #return dictionary with keys (states, actions) and values (rewards, next_states)
-    r_dict = {}
-    p_dict = {}
-    for state, action, reward, next_state in trajectory:
-        r_dict[(state, action)] = reward
-        p_dict[(state, action)] = next_state
-
-    return r_dict, p_dict
-
-#Implement a routine which estimates r (s, a) and p (s, a) from a trajectory
 def estimate_r_p(trajectory):
-    #return dictionary with keys (states, actions) and values (rewards, next_states)
-    r_dict = {}
-    p_dict = {}
+    """
+    Estimates the reward and transition probabilities based on the given trajectory.
+
+    Args:
+        trajectory (list): A list of tuples representing the trajectory. Each tuple contains the state, action, reward, and next state.
+
+    Returns:
+        tuple: A tuple containing the estimated reward matrix and transition probability matrix.
+
+    """
+
+    #Initialization of the reward and transition probability
+    p_estimated = np.zeros((NB_LINES * NB_COLUMNS, 4, NB_LINES * NB_COLUMNS))
+    r_estimated = np.zeros((NB_LINES * NB_COLUMNS, 4))
+    r_estimated_count = np.zeros((NB_LINES * NB_COLUMNS, 4))
+
+    #Estimation of the reward and transition probability
     for state, action, reward, next_state in trajectory:
-        if (state, action) in r_dict:
-            r_dict[(state, action)] += reward
-            p_dict[(state, action)].append(next_state)
-        else:    
-            r_dict[(state, action)] = reward
-            p_dict[(state, action)] = [next_state]
+        s = state[0] * NB_COLUMNS + state[1]
+        a = dict_actions[action]
+        s_prime = next_state[0] * NB_COLUMNS + next_state[1]
+        r_estimated[s, a] += reward
+        r_estimated_count[s, a] += 1
+        p_estimated[s, a, s_prime] += 1
 
-    for key in r_dict:
-        r_dict[key] = r_dict[key] / len(p_dict[key])
-        # i want in each key of p_dict a list of next states associated with a probability
-        # i.e. if i have 2 next states, i want to have 2 probabilities
+    #normalization of the reward and transition probability
+    for i in range(NB_LINES * NB_COLUMNS):
+        for j in range(4):
+            if r_estimated_count[i, j] != 0:
+                r_estimated[i, j] = r_estimated[i, j] / r_estimated_count[i, j]
+    for i in range(NB_LINES * NB_COLUMNS):
+        for j in range(4):
+            s = np.sum(p_estimated[i, j])
+            if s != 0:
+                p_estimated[i, j] = p_estimated[i, j] / s
+            else:
+                p_estimated[i, j] = np.ones(NB_LINES * NB_COLUMNS) / NB_LINES / NB_COLUMNS
 
-        # i will use the following formula to compute the probability of each next state : sum of given next state / total number of next states
-        # this is equivalent to the number of times the next state appears in the list of next states / total number of next states
+    return r_estimated, p_estimated
 
-        for next_state in p_dict[key]:
-            p_dict[key][p_dict[key].index(next_state)] = p_dict[key].count(next_state) / len(p_dict[key])
+#Initialization of the true reward and transition probability
+true_p_det = np.zeros((NB_LINES * NB_COLUMNS, 4, NB_LINES * NB_COLUMNS))
+true_r_det = np.zeros((NB_LINES * NB_COLUMNS, 4))
 
-    return r_dict, p_dict
+true_p_sto = np.zeros((NB_LINES * NB_COLUMNS, 4, NB_LINES * NB_COLUMNS))
+true_r_sto = np.zeros((NB_LINES * NB_COLUMNS, 4))
 
+#Computation of the true reward and transition probability
+for i in range(NB_LINES):
+    for j in range(NB_COLUMNS):
+        for k in range(4):
+            for l in range(NB_LINES):
+                for m in range(NB_COLUMNS):
+                    true_p_det[i * NB_COLUMNS + j, k, l * NB_COLUMNS + m] = det_mdp.p_sp_s_a((i, j), ACTIONS_ALLOWED[k], (l, m))
+                    true_p_sto[i * NB_COLUMNS + j, k, l * NB_COLUMNS + m] = sto_mdp.p_sp_s_a((i, j), ACTIONS_ALLOWED[k], (l, m))
+            true_r_det[i * NB_COLUMNS + j, k] = det_mdp.r_s_a((i, j), ACTIONS_ALLOWED[k])
+            true_r_sto[i * NB_COLUMNS + j, k] = sto_mdp.r_s_a((i, j), ACTIONS_ALLOWED[k])
 
-det_MDP = MDP(False)
-sto_MDP = MDP(True)
-
-det_psa = det_MDP.p_sp_s_a
-sto_psa = sto_MDP.p_sp_s_a
-
-def compute_Q(r_dict, p_dict, gamma, N):
-    Q = {}
-    for state, action in r_dict:
-        Q[(state, action)] = r_dict[(state, action)]
-        for next_state in p_dict[(state, action)]:
-            Q[(state, action)] += gamma * p_dict[(state, action)][p_dict[(state, action)].index(next_state)] * N[next_state]
-    return Q
-
-def compute_N(Q, N, N_runs):
-    for _ in range(N_runs):
-        N_new = {}
-        for state in N:
-            N_new[state] = max([Q[(state, action)] for action in ACTIONS_ALLOWED])
-        N = N_new
-    return N
-
-def main():
-    ag = agent(ACTIONS_ALLOWED)
-    det_dm = domain(REWARDS, GAMMA, False)
-    sto_dm = domain(REWARDS, GAMMA, True, PROB_STOCHASTIC)
-
-    j_det = det_dm.function_j(ag, N, 100) # normalizing because of the random nature of the agent
-    j_det_mean = np.mean(j_det, axis=0)
-    print(j_det_mean.shape)
-
-    trajectory = compute_trajectory(det_dm, ag, 100)
-    r_dict, p_dict = traj_to_dict(trajectory)
-    r_dict_est, p_dict_est = estimate_r_p(trajectory)
-
-    Q = compute_Q(r_dict, p_dict, GAMMA, j_det_mean)
-    N = compute_N(Q, j_det_mean, 100)
-    print(N)
-
-    j_det = det_dm.function_j(ag, N, 100) # normalizing because of the random nature of the agent
-    j_det_mean = np.mean(j_det, axis=0)
-    print(j_det_mean.shape)
+#Initialization of the norm infinity and the number of steps for the computation of the trajectory        
+N = [10, 100, 1000, 10000, 100000, 1000000]
+norm_inf_det = np.zeros((len(N), 2))
+norm_inf_sto = np.zeros((len(N), 2))
 
 
+for i,n in enumerate(N):
+    trajectory = compute_trajectory(det_dom, agent(ACTIONS_ALLOWED), n)
+    r_estimated, p_estimated = estimate_r_p(trajectory)
+    norm_inf_det[i] = [np.max(np.abs(r_estimated - true_r_det)), np.max(np.abs(p_estimated - true_p_det))]
 
-    print("Deterministic MDP")
-    deterministic_mdp = MDP(False)
-    deterministic_mdp.compute_policies_iteratively(N_ITERATIONS)
-    print("Policy:\n", translater_tuple_action(deterministic_mdp.policy))
-    j_det = deterministic_mdp.function_j(N)
-    print("Expected return:\n", j_det)
+    trajectory = compute_trajectory(sto_dom, agent(ACTIONS_ALLOWED), n)
+    r_estimated, p_estimated = estimate_r_p(trajectory)
+    norm_inf_sto[i] = [np.max(np.abs(r_estimated - true_r_sto)), np.max(np.abs(p_estimated - true_p_sto))]
 
-    print("Stochastic MDP")
-    stochastic_mdp = MDP(True)
-    stochastic_mdp.compute_policies_iteratively(N_ITERATIONS)
-    print("Policy:\n", translater_tuple_action(stochastic_mdp.policy))
-    j_sto = stochastic_mdp.function_j(N)
-    print("Expected return:\n", j_sto)
+plt.plot(N, norm_inf_det[:, 0], label = "r")
+plt.plot(N, norm_inf_det[:, 1], label = "p")
 
-    plt.imshow(j_det_mean, cmap='hot', interpolation='nearest')
-    plt.show()
-    plt.imshow(j_det, cmap='hot', interpolation='nearest')
-    plt.show()
-    plt.imshow(j_sto, cmap='hot', interpolation='nearest')
-    plt.show()
+plt.xlabel("N")
+plt.ylabel("||true - estimated||")
+plt.legend()
+plt.title("Deterministic domain")
+
+plt.show()
+
+plt.plot(N, norm_inf_sto[:, 0], label = "r")
+plt.plot(N, norm_inf_sto[:, 1], label = "p")
+
+plt.xlabel("N")
+plt.ylabel("||true - estimated||")
+plt.legend()
+plt.title("Stochastic domain")
+
+plt.show()
+
+
+# Constants from section3.py
+REWARDS = np.matrix([
+    [-3, 1, -5, 0, 19],
+    [6, 3, 8, 9, 10],
+    [5, -8, 4, 1, -8],
+    [6, -9, 4, 19, -5],
+    [-20, -17, -4, -3, 9]
+])
+ACTIONS_ALLOWED = [(1,0), (-1,0), (0,1), (0,-1)]
+GAMMA = 0.99
+N = 10000
+
+# Derived constants
+n_states = REWARDS.shape[0] * REWARDS.shape[1]
+n_actions = len(ACTIONS_ALLOWED)
+
+# Initialize the estimates
+br = np.zeros((n_states, n_actions))
+bp = np.zeros((n_states, n_actions, n_states))
+bQ = np.zeros((n_states, n_actions))
+counts = np.zeros((n_states, n_actions))
+
+# Generate a trajectory using a random uniform policy
+policy = np.ones((n_states, n_actions)) / n_actions
+T = 1000
+trajectory = compute_trajectory(domain, agent,T)
+
+# Estimate r(s, a) and p(s'|s, a)
+for t in range(T - 1):
+    s, a, r, s_next = trajectory[t]
+    counts[s, a] += 1
+    br[s, a] += (r - br[s, a]) / counts[s, a]
+    bp[s, a, s_next] += (1 - bp[s, a, s_next]) / counts[s, a]
+
+# Compute bQ using br and bp
+for s in range(n_states):
+    for a in range(n_actions):
+        for s_next in range(n_states):
+            bQ[s, a] += bp[s, a, s_next] * (br[s, a] + GAMMA * np.max(bQ[s_next]))
+
+# Derive bμ* from bQ
+bmu_star = np.argmax(bQ, axis=1)
+
+true_Q = np.zeros((n_states, n_actions))
+for s in range(n_states):
+    for a in range(n_actions):
+        for s_next in range(n_states):
+            true_Q[s, a] = (sto_mdp.Q_d[s],sto_mdp.Q_r[s],sto_mdp.Q_u[s],sto_mdp.Q_l[s])
+
+# Calculate Jbμ*N and Jμ*N for each state
+Jbmu_star_N = np.sum(bQ[np.arange(n_states), bmu_star])
+Jmu_star_N = np.sum(true_Q[np.arange(n_states), bmu_star])
+
+# Display the results
+print("bQ:\n", bQ)
+print("bmu_star:\n", bmu_star)
+print("Jbmu_star_N:\n", Jbmu_star_N)
+print("Jmu_star_N:\n", Jmu_star_N)
+
+# Plot the convergence of bp and br
+plt.figure()
+plt.plot(np.linalg.norm(bp - true_p_sto, ord=np.inf, axis=2))
+plt.plot(np.linalg.norm(br - true_r_sto, ord=np.inf, axis=1))
+plt.legend(["bp", "br"])
+plt.xlabel("Time step")
+plt.ylabel("Infinite norm")
+plt.show()
