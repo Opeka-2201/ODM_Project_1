@@ -27,6 +27,7 @@ class agent:
         self.actions_allowed = actions_allowed
 
     def chose_action(self):
+        # The agent will simply choose a random action
         return random.choice(self.actions_allowed)
     
 class domain:
@@ -39,13 +40,16 @@ class domain:
         self.prob_stochastic = prob_stochastic
     
     def reward(self, visited):
+        # The reward is the value of the visited cell
         return self.rewards[visited[0], visited[1]]
 
     def step(self, action):
+        # The agent takes an action and the domain returns the new state, the reward and the transition
         state = self.state
 
         visited = self.dynamic(state, action, self.nb_lines, self.nb_columns)
         if self.bool_stochastic and random.random() > self.prob_stochastic:
+            # If w < 1/2 the agent will be teleported to (0, 0)
             visited = (0, 0)
 
         reward = self.reward(visited)
@@ -55,6 +59,7 @@ class domain:
     
     @staticmethod
     def dynamic(state, action, nb_lines, nb_columns):
+        # The dynamic of the domain when it is deterministic
         return (min(max(state[0] + action[0], 0), nb_lines - 1), min(max(state[1] + action[1], 0), nb_columns - 1))
     
 ## MAIN ##
