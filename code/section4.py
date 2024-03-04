@@ -1,152 +1,137 @@
 # INFO8003-1: Optimal Decision Making for Complex Problems
 # Project 1: Reinforcement Learning in a Discrete Domain
 # Authors: Romain LAMBERMONT, Arthur LOUIS
-# Section 2: Expected return of a policy
+# Section 3: Optimal policy
 
 ## IMPORTS ##
-import random
 import numpy as np
-import matplotlib.pyplot as plt
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
-## CONSTANTS ##
-REWARDS = np.matrix([
-    [-3, 1, -5, 0, 19],
-    [6, 3, 8, 9, 10],
-    [5, -8, 4, 1, -8],
-    [6, -9, 4, 19, -5],
-    [-20, -17, -4, -3, 9]
-])
-ACTIONS_ALLOWED = [(1,0), (-1,0), (0,1), (0,-1)]
-GAMMA = 0.99
-N = 10000
-N_RUNS_STOCHASTIC = 10
-PROB_STOCHASTIC = 0.5
 
-## CLASSES ##
-class agent:
-    def __init__(self, actions_allowed):
-        self.actions_allowed = actions_allowed
+from section3 import MDP, REWARDS, ACTIONS_ALLOWED, TRANSLATION, GAMMA, N, NB_LINES, NB_COLUMNS, PROB_STOCHASTIC, N_ITERATIONS, transition, translater_tuple_action
+from section2 import domain, agent
 
-    def chose_action(self):
-        return random.choice(self.actions_allowed)
-    
-class domain:
-    def __init__(self, rewards, gamma, bool_stochastic, prob_stochastic = 0, actions_allowed = ACTIONS_ALLOWED, N = N, N_runs = N_RUNS_STOCHASTIC):
-        self.rewards = rewards
-        self.gamma = gamma
-        self.bool_stochastic = bool_stochastic
-        self.nb_lines, self.nb_columns = rewards.shape
-        self.prob_stochastic = prob_stochastic
-        self.estimated_p = self.estimated_p(N)
-        self.estimated_r = self.estimated_r(N)
-        self.estimated_Q = self.estimated_Q(N)
-        self.actions_allowed = actions_allowed
+det_dom = domain(False)
+sto_dom = domain(True)
 
-        
-    def reward(self, visited):
-        return self.rewards[visited[0], visited[1]]
-    
-    def function_j(self, agent, N, N_runs):
-        lines = self.nb_lines
-        columns = self.nb_columns
-        J = np.zeros((N_runs, lines, columns))
+def compute_trajectory(domain, agent, N):
+    #return list of tuples (state, action, reward,next_state)
+    lines = domain.nb_lines
+    columns = domain.nb_columns
+    trajectory = []
+    state = (3,0)
+    for _ in range(N):
+        action = agent.chose_action()
+        next_state = domain.dynamic(state, action, lines, columns)
+        reward = domain.reward(next_state)
+        trajectory.append((state, action, reward, next_state))
+        state = next_state
+    return trajectory
 
-        print("Computing J for domain:", "stochastic" if self.bool_stochastic else "deterministic")
-        for i in tqdm(range(N_runs)):
-            J_run = np.zeros((lines, columns))
-            for _ in range(N):
-                J_new = np.zeros((lines, columns))
-                
-                for i in range(lines):
-                    for j in range(columns):
-                        state = self.dynamic((i,j), agent.chose_action(), lines, columns)
-                        if self.bool_stochastic:
-                            J_new[i,j] = self.prob_stochastic * (self.reward(state) + self.gamma * J_run[state[0], state[1]]) + \
-                                         (1 - self.prob_stochastic) * (self.reward((0,0)) + self.gamma * J_run[0,0])
-                        else:
-                            J_new[i,j] = self.reward(state) + self.gamma * J_run[state[0], state[1]]
+def compute_J(domain, agent, N, N_runs):
+    return domain.function_j(agent, N, N_runs, mean = True)
 
-                J_run = J_new
-            J[i] = J_run
-        return J
 
-    def estimated_p(self, N):
-        lines = self.nb_lines
-        columns = self.nb_columns
-        P = np.zeros((lines, columns, len(self.actions_allowed)))
+def traj_to_dict(trajectory):
+    #return dictionary with keys (states, actions) and values (rewards, next_states)
+    r_dict = {}
+    p_dict = {}
+    for state, action, reward, next_state in trajectory:
+        r_dict[(state, action)] = reward
+        p_dict[(state, action)] = next_state
 
-        print("Computing P for domain:", "stochastic" if self.bool_stochastic else "deterministic")
-        for i in tqdm(range(N)):
-            for i in range(lines):
-                for j in range(columns):
-                    for a in range(len(self.actions_allowed)):
-                        state = self.dynamic((i,j), self.actions_allowed[a], lines, columns)
-                        P[i,j,a] = self.prob_stochastic * (self.reward(state) + self.gamma * self.J[state[0], state[1]]) + \
-                                    (1 - self.prob_stochastic) * (self.reward((0,0)) + self.gamma * self.J[0,0])
-        return P
-    
-    def estimated_r(self, N):
-        lines = self.nb_lines
-        columns = self.nb_columns
-        R = np.zeros((lines, columns, len(self.actions_allowed)))
+    return r_dict, p_dict
 
-        print("Computing R for domain:", "stochastic" if self.bool_stochastic else "deterministic")
-        for i in tqdm(range(N)):
-            for i in range(lines):
-                for j in range(columns):
-                    for a in range(len(self.actions_allowed)):
-                        state = self.dynamic((i,j), self.actions_allowed[a], lines, columns)
-                        R[i,j,a] = self.reward(state)
-        return R
-    
-    def estimated_Q(self, N):
-        #using estimated_r and estimated_p
-        lines = self.nb_lines
-        columns = self.nb_columns
-        Q = np.zeros((lines, columns, len(self.actions_allowed)))
+#Implement a routine which estimates r (s, a) and p (s, a) from a trajectory
+def estimate_r_p(trajectory):
+    #return dictionary with keys (states, actions) and values (rewards, next_states)
+    r_dict = {}
+    p_dict = {}
+    for state, action, reward, next_state in trajectory:
+        if (state, action) in r_dict:
+            r_dict[(state, action)] += reward
+            p_dict[(state, action)].append(next_state)
+        else:    
+            r_dict[(state, action)] = reward
+            p_dict[(state, action)] = [next_state]
 
-        print("Computing Q for domain:", "stochastic" if self.bool_stochastic else "deterministic")
-        for i in tqdm(range(N)):
-            for i in range(lines):
-                for j in range(columns):
-                    for a in range(len(self.actions_allowed)):
-                        Q[i,j,a] = self.estimated_r[i,j,a] + self.gamma * np.max([self.estimated_p[i,j,a] * self.J[state[0], state[1]] for state in self.dynamic((i,j), self.actions_allowed[a], lines, columns)])
-        return Q
-    
+    for key in r_dict:
+        r_dict[key] = r_dict[key] / len(p_dict[key])
+        # i want in each key of p_dict a list of next states associated with a probability
+        # i.e. if i have 2 next states, i want to have 2 probabilities
 
-    @staticmethod
-    def dynamic(state, action, nb_lines, nb_columns):
-        return (min(max(state[0] + action[0], 0), nb_lines - 1), min(max(state[1] + action[1], 0), nb_columns - 1))
-    
+        # i will use the following formula to compute the probability of each next state : sum of given next state / total number of next states
+        # this is equivalent to the number of times the next state appears in the list of next states / total number of next states
 
-## MAIN ##
-# Create the agent and the domain
-a = agent(ACTIONS_ALLOWED)
-d = domain(REWARDS, GAMMA, False)
-d_sto = domain(REWARDS, GAMMA, True, PROB_STOCHASTIC)
+        for next_state in p_dict[key]:
+            p_dict[key][p_dict[key].index(next_state)] = p_dict[key].count(next_state) / len(p_dict[key])
+
+    return r_dict, p_dict
+
+
+det_MDP = MDP(False)
+sto_MDP = MDP(True)
+
+det_psa = det_MDP.p_sp_s_a
+sto_psa = sto_MDP.p_sp_s_a
+
+def compute_Q(r_dict, p_dict, gamma, N):
+    Q = {}
+    for state, action in r_dict:
+        Q[(state, action)] = r_dict[(state, action)]
+        for next_state in p_dict[(state, action)]:
+            Q[(state, action)] += gamma * p_dict[(state, action)][p_dict[(state, action)].index(next_state)] * N[next_state]
+    return Q
+
+def compute_N(Q, N, N_runs):
+    for _ in range(N_runs):
+        N_new = {}
+        for state in N:
+            N_new[state] = max([Q[(state, action)] for action in ACTIONS_ALLOWED])
+        N = N_new
+    return N
 
 def main():
-    # Compute J for the deterministic domain
-    J_det = d.function_j(a, N, N_RUNS_STOCHASTIC)
-    J_sto = d_sto.function_j(a, N, N_RUNS_STOCHASTIC)
-    return J_det, J_sto
+    ag = agent(ACTIONS_ALLOWED)
+    det_dm = domain(REWARDS, GAMMA, False)
+    sto_dm = domain(REWARDS, GAMMA, True, PROB_STOCHASTIC)
 
-J_det, J_sto = main()
+    j_det = det_dm.function_j(ag, N, 100) # normalizing because of the random nature of the agent
+    j_det_mean = np.mean(j_det, axis=0)
+    print(j_det_mean.shape)
 
-# Display the results
-print("J_det:\n", J_det)
-print("J_sto:\n", J_sto)
-print("J_det.shape:", J_det.shape)
-print("J_sto.shape:", J_sto.shape)
-print("J_det[0]:\n", J_det[0])
-print("J_sto[0]:\n", J_sto[0])
-print("J_det[0].shape:", J_det[0].shape)
-print("J_sto[0].shape:", J_sto[0].shape)
-print("J_det[0][0]:\n", J_det[0][0])
-print("J_sto[0][0]:\n", J_sto[0][0])
-print("J_det[0][0].shape:", J_det[0][0].shape)
-print("J_sto[0][0].shape:", J_sto[0][0].shape)
-print("J_det[0][0][0]:\n", J_det[0][0][0])
-print("J_sto[0][0][0]:\n", J_sto[0][0][0])
-print("J_det[0][0][0].shape:", J_det[0][0][0].shape)
+    trajectory = compute_trajectory(det_dm, ag, 100)
+    r_dict, p_dict = traj_to_dict(trajectory)
+    r_dict_est, p_dict_est = estimate_r_p(trajectory)
+
+    Q = compute_Q(r_dict, p_dict, GAMMA, j_det_mean)
+    N = compute_N(Q, j_det_mean, 100)
+    print(N)
+
+    j_det = det_dm.function_j(ag, N, 100) # normalizing because of the random nature of the agent
+    j_det_mean = np.mean(j_det, axis=0)
+    print(j_det_mean.shape)
+
+
+
+    print("Deterministic MDP")
+    deterministic_mdp = MDP(False)
+    deterministic_mdp.compute_policies_iteratively(N_ITERATIONS)
+    print("Policy:\n", translater_tuple_action(deterministic_mdp.policy))
+    j_det = deterministic_mdp.function_j(N)
+    print("Expected return:\n", j_det)
+
+    print("Stochastic MDP")
+    stochastic_mdp = MDP(True)
+    stochastic_mdp.compute_policies_iteratively(N_ITERATIONS)
+    print("Policy:\n", translater_tuple_action(stochastic_mdp.policy))
+    j_sto = stochastic_mdp.function_j(N)
+    print("Expected return:\n", j_sto)
+
+    plt.imshow(j_det_mean, cmap='hot', interpolation='nearest')
+    plt.show()
+    plt.imshow(j_det, cmap='hot', interpolation='nearest')
+    plt.show()
+    plt.imshow(j_sto, cmap='hot', interpolation='nearest')
+    plt.show()

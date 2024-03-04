@@ -474,7 +474,7 @@ if __name__ == "__main__":
     deter_MDP = MDP(False)
     stocha_MDP = MDP(True)
 
-    true_r_deter = compute_true_r(deter_MDP)
+    true_r_deter = (deter_MDP)
     true_r_stocha = compute_true_r(stocha_MDP)
     true_p_deter = compute_true_p(deter_MDP)
     true_p_stocha = compute_true_p(stocha_MDP)

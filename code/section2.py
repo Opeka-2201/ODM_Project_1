@@ -42,7 +42,7 @@ class domain:
     def reward(self, visited):
         return self.rewards[visited[0], visited[1]]
     
-    def function_j(self, agent, N, N_runs):
+    def function_j(self, agent, N, N_runs, mean = False):
         lines = self.nb_lines
         columns = self.nb_columns
         J = np.zeros((N_runs, lines, columns))
@@ -65,6 +65,8 @@ class domain:
                 J_run = J_new
             
             J[k,:,:] = J_run
+            if mean:
+                J = np.mean(J, axis=0)
         return J
         
     @staticmethod
