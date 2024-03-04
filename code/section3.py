@@ -30,9 +30,11 @@ NB_COLUMNS = REWARDS.shape[1]
 
 ## FUNCTIONS ##
 def transition(state, action):
+    # The dynamic of the environment is deterministic
     return (min(max(0, state[0] + action[0]), NB_LINES - 1), min(max(0, state[1] + action[1]), NB_COLUMNS - 1))
 
 def translater_tuple_action(policy):
+    # Translate the action tuple into an arrow
     translated = policy.copy()
     for i in range (NB_LINES):
         for j in range (NB_COLUMNS):
@@ -50,12 +52,16 @@ class MDP:
         self.Q_l = np.zeros((NB_LINES, NB_COLUMNS), dtype=float)
 
     def compute_policies_iteratively(self, N):
+        # Compute the policies iteratively starting from N = 1
         current = None
 
         for n in range(1, N+1):
             previous = current
+            # update Q values
             self.Q_u, self.Q_d, self.Q_r, self.Q_l = self.compute_Q(n)
+            # update policy
             self.compute_policy()
+            # swap + check convergence
             current = self.policy
             print("Iteration:", n, " \tEqual policies:", np.array_equal(previous, current))
 
@@ -65,7 +71,9 @@ class MDP:
         Q_r = np.zeros((NB_LINES, NB_COLUMNS), dtype=float)
         Q_l = np.zeros((NB_LINES, NB_COLUMNS), dtype=float)
 
+        # compute the Q values iteratively from N = 1 to N
         for _ in range(N):
+            # temporary Q values for swapping later
             temp_u = np.zeros((NB_LINES, NB_COLUMNS), dtype=float)
             temp_d = np.zeros((NB_LINES, NB_COLUMNS), dtype=float)
             temp_r = np.zeros((NB_LINES, NB_COLUMNS), dtype=float)
@@ -73,6 +81,7 @@ class MDP:
 
             for i in range(NB_LINES):
                 for j in range(NB_COLUMNS):
+                    # compute the Q values for each action using the reward function
                     temp_u = self.reward_function(temp_u, Q_u, Q_d, Q_r, Q_l, (i, j), ACTIONS_ALLOWED[0])
                     temp_d = self.reward_function(temp_d, Q_u, Q_d, Q_r, Q_l, (i, j), ACTIONS_ALLOWED[1])
                     temp_r = self.reward_function(temp_r, Q_u, Q_d, Q_r, Q_l, (i, j), ACTIONS_ALLOWED[2])
@@ -87,19 +96,27 @@ class MDP:
         return Q_u, Q_d, Q_r, Q_l
     
     def reward_function(self, temp, Q_u, Q_d, Q_r, Q_l, state, action):
+        # Compute the reward function for a given state and action using the Q values
+
+        # Probabilities and expected rewards
         state_prime = transition(state, action)
         r_s_a = self.r_s_a(state, action)
         p_sp_s_a = self.p_sp_s_a(state_prime, state, action)
+
+        # Compute the reward function
         reward_function = p_sp_s_a * max(Q_u[state_prime[0], state_prime[1]], Q_d[state_prime[0], state_prime[1]], Q_r[state_prime[0], state_prime[1]], Q_l[state_prime[0], state_prime[1]])
 
+        # Stochastic behavior
         if p_sp_s_a < 1 and self.stochastic_behavior:
             p_stoch = self.p_sp_s_a((0, 0), state, action)
             reward_function += p_stoch * max(Q_u[0, 0], Q_d[0, 0], Q_r[0, 0], Q_l[0, 0])
 
+        # Update the temporary Q values
         temp[state[0], state[1]] = r_s_a + GAMMA * reward_function
         return temp
 
     def r_s_a(self, state, action):
+        # Expected reward for a given state and action depending on the stochastic behavior
         state_prime = transition(state, action)
         if self.stochastic_behavior:
             return PROB_STOCHASTIC * REWARDS[0, 0] + (1 - PROB_STOCHASTIC) * REWARDS[state_prime[0], state_prime[1]]
@@ -107,6 +124,7 @@ class MDP:
             return REWARDS[state_prime[0], state_prime[1]]
 
     def p_sp_s_a(self, state_prime, state, action):
+        # Probability of reaching a state_prime from state using action depending on the stochastic behavior
         visited = transition(state, action)
         if self.stochastic_behavior:
             return PROB_STOCHASTIC * (1 if state_prime == visited else 0) + (1 - PROB_STOCHASTIC) * (1 if state_prime == (0, 0) else 0)
@@ -114,17 +132,20 @@ class MDP:
             return 1 if state_prime == visited else 0
 
     def compute_policy(self):
+        # Compute the policy from the Q values by fetching the action with the highest Q value
         self.policy = np.zeros((NB_LINES, NB_COLUMNS), dtype=object)
         for i in range(NB_LINES):
             for j in range(NB_COLUMNS):
                 self.policy[i, j] = ACTIONS_ALLOWED[np.argmax([self.Q_u[i, j], self.Q_d[i, j], self.Q_r[i, j], self.Q_l[i, j]])]
 
     def policy_in_state(self, state):
+        # Return the action in a given state to follow the policy
         if self.policy is None:
             self.compute_policy()
         return self.policy[state[0], state[1]]
 
     def function_j(self, N):
+        # Compute the expected return for a given policy (same as before but with an optimal policy instead of a random one)
         J_N = np.zeros((NB_LINES, NB_COLUMNS))
         for _ in range(N):
             temp = np.zeros((NB_LINES, NB_COLUMNS))
