@@ -48,7 +48,7 @@ class domain:
         J = np.zeros((N_runs, lines, columns))
 
         print("Computing J for domain:", "stochastic" if self.bool_stochastic else "deterministic")
-        for i in tqdm(range(N_runs)):
+        for k in tqdm(range(N_runs)):
             J_run = np.zeros((lines, columns))
             for _ in range(N):
                 J_new = np.zeros((lines, columns))
@@ -63,7 +63,8 @@ class domain:
                             J_new[i,j] = self.reward(state) + self.gamma * J_run[state[0], state[1]]
 
                 J_run = J_new
-            J[i] = J_run
+            
+            J[k,:,:] = J_run
         return J
         
     @staticmethod
@@ -78,6 +79,7 @@ def main():
 
     j_det = det_dm.function_j(ag, N, N_RUNS_STOCHASTIC) # normalizing because of the random nature of the agent
     j_det_mean = np.mean(j_det, axis=0)
+    print(j_det_mean.shape)
     j_det_std = np.std(j_det, axis=0)
     j_sto = sto_dm.function_j(ag, N, N_RUNS_STOCHASTIC)
     j_sto_mean = np.mean(j_sto, axis=0)
