@@ -1,11 +1,12 @@
 # INFO8003-1: Optimal Decision Making for Complex Problems
 # Project 1: Reinforcement Learning in a Discrete Domain
 # Authors: Romain LAMBERMONT, Arthur LOUIS
-# Section 2: Optimal policy
+# Section 3: Optimal policy
 
 ## IMPORTS ##
 import numpy as np
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 ## CONSTANTS ##
 REWARDS = np.matrix([
@@ -148,13 +149,45 @@ def main():
     deterministic_mdp = MDP(False)
     deterministic_mdp.compute_policies_iteratively(N_ITERATIONS)
     print("Policy:\n", translater_tuple_action(deterministic_mdp.policy))
-    print("Expected return:\n", deterministic_mdp.function_j(N))
+    j_det = deterministic_mdp.function_j(N)
+    print("Expected return:\n", j_det)
 
     print("Stochastic MDP")
     stochastic_mdp = MDP(True)
     stochastic_mdp.compute_policies_iteratively(N_ITERATIONS)
     print("Policy:\n", translater_tuple_action(stochastic_mdp.policy))
-    print("Expected return:\n", stochastic_mdp.function_j(N))
+    j_sto = stochastic_mdp.function_j(N)
+    print("Expected return:\n", j_sto)
+
+    _, axs = plt.subplots(1, 2, figsize=(10, 5))
+    axs[0].imshow(j_det, cmap="viridis", interpolation="nearest")
+    axs[0].set_title("Deterministic domain")
+    axs[0].set_xlabel("Columns")
+    axs[0].set_ylabel("Rows")
+    axs[0].set_xticks(np.arange(j_det.shape[1]))
+    axs[0].set_yticks(np.arange(j_det.shape[0]))
+    axs[0].set_xticklabels(np.arange(j_det.shape[1]))
+    axs[0].set_yticklabels(np.arange(j_det.shape[0]))
+    
+    for i in range(j_det.shape[0]):
+        for j in range(j_det.shape[1]):
+            _ = axs[0].text(j, i, f'{j_det[i, j]:.2f}', ha="center", va="center", color="black")
+    
+    axs[1].imshow(j_sto, cmap="viridis", interpolation="nearest")
+    axs[1].set_title("Stochastic domain")
+    axs[1].set_xlabel("Columns")
+    axs[1].set_ylabel("Rows")
+    axs[1].set_xticks(np.arange(j_sto.shape[1]))
+    axs[1].set_yticks(np.arange(j_sto.shape[0]))
+    axs[1].set_xticklabels(np.arange(j_sto.shape[1]))
+    axs[1].set_yticklabels(np.arange(j_sto.shape[0]))
+    
+    for i in range(j_sto.shape[0]):
+        for j in range(j_sto.shape[1]):
+            _ = axs[1].text(j, i, f'{j_sto[i, j]:.2f}', ha="center", va="center", color="black")
+    
+    plt.suptitle("$J^\mu_N$ for $N = " + str(N) + "$ and $N_{runs} = " + str(N_RUNS_STOCHASTIC) + "$")
+    plt.show()
 
 if __name__ == "__main__":
     main()
