@@ -39,6 +39,8 @@ class Q_Learning:
         self.estimated_Q = self.offline_learning()
         self.estimated_policy = self.compute_policy()
 
+        self.estimated_policy_offline = self.estimated_policy
+
     def compute_policy(self):
         # Compute the policy from the Q values by fetching the action with the highest Q value
         self.policy = np.zeros((NB_LINES, NB_COLUMNS), dtype=object)
@@ -112,9 +114,12 @@ class Q_Learning:
     
     def first_online_learning(self):
         infinite_norm = np.zeros(EPOCHS)
+        infinite_norm_2 = np.zeros(EPOCHS)
         mdp = MDP(self.stochastic_behaviour)
         mdp.compute_policies_iteratively(10)
         j_mu = mdp.function_j(5000)
+        mdp_Q = np.array([mdp.Q_u, mdp.Q_d, mdp.Q_r, mdp.Q_l])
+        mdp_Q = np.moveaxis(mdp_Q, 0, -1)
 
         estimated_Q = np.zeros((NB_LINES, NB_COLUMNS, len(ACTIONS_ALLOWED)))
         self.estimated_Q = estimated_Q
@@ -139,20 +144,35 @@ class Q_Learning:
 
             estimated_j_mu = self.function_j(5000)
             infinite_norm[epoch] = np.max(np.abs(j_mu - estimated_j_mu))
+            infinite_norm_2[epoch] = np.max(np.abs(mdp_Q - estimated_Q))
 
-        plt.figure()
-        plt.plot(range(EPOCHS), infinite_norm)
-        plt.xlabel("Epochs")
-        plt.ylabel("Infinite norm")
-        plt.title("Convergence of the infinite norm for the first method\n with behaviour: " + ("stoachastic " if self.stochastic_behaviour else "deterministic ") + "and " + r"$\gamma =$" + str(GAMMA_3))
-        plt.savefig("figures/first_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
-        plt.close()
+        if GAMMA == 0.9:
+            plt.figure()
+            plt.plot(range(EPOCHS), infinite_norm)
+            plt.xlabel("Epochs")
+            plt.ylabel("Infinite norm")
+            plt.title("Convergence of the expected return for the 1st method\n with behaviour: " + ("stochastic " if self.stochastic_behaviour else "deterministic ") + "and " + r"$\gamma =$" + str(GAMMA_3))
+            plt.savefig("figures/first_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
+            plt.close()
+
+        if GAMMA == 0.4:
+            plt.figure()
+            plt.plot(range(EPOCHS), infinite_norm_2)
+            plt.xlabel("Epochs")
+            plt.ylabel("Infinite norm")
+            plt.title(r"Convergence of $\hat{Q}$ " + "for the 1st method\n with behaviour: " + ("stochastic " if self.stochastic_behaviour else "deterministic ") + "and " + r"$\gamma =$" + str(GAMMA_3))
+            plt.savefig("figures/first_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
+            plt.close()
+
     
     def second_online_learning(self):
         infinite_norm = np.zeros(EPOCHS)
+        infinite_norm_2 = np.zeros(EPOCHS)
         mdp = MDP(self.stochastic_behaviour)
         mdp.compute_policies_iteratively(10)
         j_mu = mdp.function_j(5000)
+        mdp_Q = np.array([mdp.Q_u, mdp.Q_d, mdp.Q_r, mdp.Q_l])
+        mdp_Q = np.moveaxis(mdp_Q, 0, -1)
 
         estimated_Q = np.zeros((NB_LINES, NB_COLUMNS, len(ACTIONS_ALLOWED)))
         self.estimated_Q = estimated_Q
@@ -179,20 +199,34 @@ class Q_Learning:
 
             estimated_j_mu = self.function_j(5000)
             infinite_norm[epoch] = np.max(np.abs(j_mu - estimated_j_mu))
+            infinite_norm_2[epoch] = np.max(np.abs(mdp_Q - estimated_Q))
 
-        plt.figure()
-        plt.plot(range(EPOCHS), infinite_norm)
-        plt.xlabel("Epochs")
-        plt.ylabel("Infinite norm")
-        plt.title("Convergence of the infinite norm for the second method\n with behaviour: " + ("stoachastic " if self.stochastic_behaviour else "deterministic ") + "and " + r"$\gamma =$" + str(GAMMA_3))
-        plt.savefig("figures/second_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
-        plt.close()
+        if GAMMA == 0.9:
+            plt.figure()
+            plt.plot(range(EPOCHS), infinite_norm)
+            plt.xlabel("Epochs")
+            plt.ylabel("Infinite norm")
+            plt.title("Convergence of the expected return for the 2nd method\n with behaviour: " + ("stochastic " if self.stochastic_behaviour else "deterministic ") + "and " + r"$\gamma =$" + str(GAMMA_3))
+            plt.savefig("figures/second_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
+            plt.close()
+
+        if GAMMA == 0.4:
+            plt.figure()
+            plt.plot(range(EPOCHS), infinite_norm_2)
+            plt.xlabel("Epochs")
+            plt.ylabel("Infinite norm")
+            plt.title(r"Convergence of $\hat{Q}$ " + "for the 2nd method\n with behaviour: " + ("stochastic " if self.stochastic_behaviour else "deterministic ") + "and " + r"$\gamma =$" + str(GAMMA_3))
+            plt.savefig("figures/second_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
+            plt.close()
 
     def third_online_learning(self):
         infinite_norm = np.zeros(EPOCHS)
+        infinite_norm_2 = np.zeros(EPOCHS)
         mdp = MDP(self.stochastic_behaviour)
         mdp.compute_policies_iteratively(10)
         j_mu = mdp.function_j(5000)
+        mdp_Q = np.array([mdp.Q_u, mdp.Q_d, mdp.Q_r, mdp.Q_l])
+        mdp_Q = np.moveaxis(mdp_Q, 0, -1)
 
         estimated_Q = np.zeros((NB_LINES, NB_COLUMNS, len(ACTIONS_ALLOWED)))
         self.estimated_Q = estimated_Q
@@ -222,18 +256,29 @@ class Q_Learning:
 
             estimated_j_mu = self.function_j(5000)
             infinite_norm[epoch] = np.max(np.abs(j_mu - estimated_j_mu))
+            infinite_norm_2[epoch] = np.max(np.abs(mdp_Q - estimated_Q))
 
-        plt.figure()
-        plt.plot(range(EPOCHS), infinite_norm)
-        plt.xlabel("Epochs")
-        plt.ylabel("Infinite norm")
-        plt.title("Convergence of the infinite norm for the third method\n with behaviour: " + ("stoachastic " if self.stochastic_behaviour else "deterministic ") + "and " + r"$\gamma =$" + str(GAMMA_3))
-        plt.savefig("figures/third_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
-        plt.close()
+        if GAMMA == 0.9:
+            plt.figure()
+            plt.plot(range(EPOCHS), infinite_norm)
+            plt.xlabel("Epochs")
+            plt.ylabel("Infinite norm")
+            plt.title("Convergence of the expected return for the 3rd method\n with behaviour: " + ("stochastic " if self.stochastic_behaviour else "deterministic ") + "and " + r"$\gamma =$" + str(GAMMA_3))
+            plt.savefig("figures/third_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
+            plt.close()
+
+        if GAMMA == 0.4:
+            plt.figure()
+            plt.plot(range(EPOCHS), infinite_norm_2)
+            plt.xlabel("Epochs")
+            plt.ylabel("Infinite norm")
+            plt.title(r"Convergence of $\hat{Q}$ " + "for the 3rd method\n with behaviour: " + ("stochastic " if self.stochastic_behaviour else "deterministic ") + "and " + r"$\gamma =$" + str(GAMMA_3))
+            plt.savefig("figures/third_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
+            plt.close()
 
 def main():
     deter = Q_Learning(False, TRAJECTORY_LENGTH, INITIAL_STATE, EPSILON, GAMMA)
-    print("\nPolicy for deterministic domain:\n", translater_tuple_action(deter.estimated_policy))
+    print("\nPolicy for deterministic domain:\n", translater_tuple_action(deter.estimated_policy_offline))
     #print(pd.DataFrame(translater_tuple_action(deter.estimated_policy)).to_latex())
     print("\nExpected return for deterministic domain:\n", deter.function_j(5000))
     #print(pd.DataFrame(deter.function_j(5000)).to_latex())
@@ -243,7 +288,7 @@ def main():
     deter.third_online_learning()
 
     stocha = Q_Learning(True, TRAJECTORY_LENGTH, INITIAL_STATE, EPSILON, GAMMA)
-    print("\nPolicy for stochastic domain:\n", translater_tuple_action(stocha.estimated_policy))
+    print("\nPolicy for stochastic domain:\n", translater_tuple_action(stocha.estimated_policy_offline))
     #print(pd.DataFrame(translater_tuple_action(stocha.estimated_policy)).to_latex())
     print("\nExpected return for stochastic domain:\n", stocha.function_j(5000))
     #print(pd.DataFrame(stocha.function_j(5000)).to_latex())
