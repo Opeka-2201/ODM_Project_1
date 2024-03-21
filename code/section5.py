@@ -152,7 +152,7 @@ class Q_Learning:
             plt.xlabel("Epochs")
             plt.ylabel("Infinite norm")
             plt.title("Convergence of the expected return for the 1st method\n with behaviour: " + ("stochastic " if self.stochastic_behaviour else "deterministic ") + "and " + r"$\gamma =$" + str(GAMMA_3))
-            plt.savefig("figures/first_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
+            plt.savefig("figures/sec5_2/first_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
             plt.close()
 
         if GAMMA == 0.4:
@@ -161,7 +161,7 @@ class Q_Learning:
             plt.xlabel("Epochs")
             plt.ylabel("Infinite norm")
             plt.title(r"Convergence of $\hat{Q}$ " + "for the 1st method\n with behaviour: " + ("stochastic " if self.stochastic_behaviour else "deterministic ") + "and " + r"$\gamma =$" + str(GAMMA_3))
-            plt.savefig("figures/first_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
+            plt.savefig("figures/sec5_3/first_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
             plt.close()
 
     
@@ -207,7 +207,7 @@ class Q_Learning:
             plt.xlabel("Epochs")
             plt.ylabel("Infinite norm")
             plt.title("Convergence of the expected return for the 2nd method\n with behaviour: " + ("stochastic " if self.stochastic_behaviour else "deterministic ") + "and " + r"$\gamma =$" + str(GAMMA_3))
-            plt.savefig("figures/second_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
+            plt.savefig("figures/sec5_2/second_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
             plt.close()
 
         if GAMMA == 0.4:
@@ -216,7 +216,7 @@ class Q_Learning:
             plt.xlabel("Epochs")
             plt.ylabel("Infinite norm")
             plt.title(r"Convergence of $\hat{Q}$ " + "for the 2nd method\n with behaviour: " + ("stochastic " if self.stochastic_behaviour else "deterministic ") + "and " + r"$\gamma =$" + str(GAMMA_3))
-            plt.savefig("figures/second_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
+            plt.savefig("figures/sec5_3/second_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
             plt.close()
 
     def third_online_learning(self):
@@ -264,7 +264,7 @@ class Q_Learning:
             plt.xlabel("Epochs")
             plt.ylabel("Infinite norm")
             plt.title("Convergence of the expected return for the 3rd method\n with behaviour: " + ("stochastic " if self.stochastic_behaviour else "deterministic ") + "and " + r"$\gamma =$" + str(GAMMA_3))
-            plt.savefig("figures/third_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
+            plt.savefig("figures/sec5_2/third_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
             plt.close()
 
         if GAMMA == 0.4:
@@ -273,7 +273,7 @@ class Q_Learning:
             plt.xlabel("Epochs")
             plt.ylabel("Infinite norm")
             plt.title(r"Convergence of $\hat{Q}$ " + "for the 3rd method\n with behaviour: " + ("stochastic " if self.stochastic_behaviour else "deterministic ") + "and " + r"$\gamma =$" + str(GAMMA_3))
-            plt.savefig("figures/third_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
+            plt.savefig("figures/sec5_3/third_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
             plt.close()
 
 def main():
