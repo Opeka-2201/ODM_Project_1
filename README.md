@@ -14,8 +14,4 @@ This project is part of the course of Optimal Decision Making for Complex Proble
 - Section 2: Expected Return of a Policy [section2.py](./code/section2.py)
 - Section 3: Optimal Policy [section3.py](./code/section3.py)
 - Section 4: System Identification [section4.py](./code/section4.py)
-- Section 5: Q-Learning in a Batch Setting
-    - Section 5.1: Offline Q-Learning [section5_1.py](./code/section5_1.py)
-    - Section 5.2: Online Q-Learning [section5_2.py](./code/section5_2.py)
-    - Section 5.3: Discount Factor [section5_3.py](./code/section5_3.py)
-    - Section 5.4: A Policy Optimization Algorithm: SARSA [section5_4.py](./code/section5_4.py)
+- Section 5: Q-Learning in a Batch Setting [section5.py](./code/section5.py)
