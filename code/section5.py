@@ -12,6 +12,7 @@ import numpy as np
 import random
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import pandas as pd
 
 ## CONSTANTS ##
 INITIAL_STATE = (3,0)
@@ -143,7 +144,7 @@ class Q_Learning:
         plt.plot(range(EPOCHS), infinite_norm)
         plt.xlabel("Epochs")
         plt.ylabel("Infinite norm")
-        plt.title("Convergence of the infinite norm for the first method with behaviour: " + ("stoachastic" if self.stochastic_behaviour else "deterministic") + "and" + r"$\gamma =$" + str(GAMMA_3))
+        plt.title("Convergence of the infinite norm for the first method\n with behaviour: " + ("stoachastic " if self.stochastic_behaviour else "deterministic ") + "and " + r"$\gamma =$" + str(GAMMA_3))
         plt.savefig("figures/first_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
         plt.close()
     
@@ -183,7 +184,7 @@ class Q_Learning:
         plt.plot(range(EPOCHS), infinite_norm)
         plt.xlabel("Epochs")
         plt.ylabel("Infinite norm")
-        plt.title("Convergence of the infinite norm for the second method with behaviour: " + ("stoachastic" if self.stochastic_behaviour else "deterministic") + "and" + r"$\gamma =$" + str(GAMMA_3))
+        plt.title("Convergence of the infinite norm for the second method\n with behaviour: " + ("stoachastic " if self.stochastic_behaviour else "deterministic ") + "and " + r"$\gamma =$" + str(GAMMA_3))
         plt.savefig("figures/second_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
         plt.close()
 
@@ -226,14 +227,16 @@ class Q_Learning:
         plt.plot(range(EPOCHS), infinite_norm)
         plt.xlabel("Epochs")
         plt.ylabel("Infinite norm")
-        plt.title("Convergence of the infinite norm for the third method with behaviour: " + ("stoachastic" if self.stochastic_behaviour else "deterministic") + "and" + r"$\gamma =$" + str(GAMMA_3))
+        plt.title("Convergence of the infinite norm for the third method\n with behaviour: " + ("stoachastic " if self.stochastic_behaviour else "deterministic ") + "and " + r"$\gamma =$" + str(GAMMA_3))
         plt.savefig("figures/third_online_learning_" + ("stochastic_" if self.stochastic_behaviour else "deterministic_") + "gamma_" + str(GAMMA_3) + ".png")
         plt.close()
 
 def main():
     deter = Q_Learning(False, TRAJECTORY_LENGTH, INITIAL_STATE, EPSILON, GAMMA)
     print("\nPolicy for deterministic domain:\n", translater_tuple_action(deter.estimated_policy))
+    #print(pd.DataFrame(translater_tuple_action(deter.estimated_policy)).to_latex())
     print("\nExpected return for deterministic domain:\n", deter.function_j(5000))
+    #print(pd.DataFrame(deter.function_j(5000)).to_latex())
 
     deter.first_online_learning()
     deter.second_online_learning()
@@ -241,7 +244,9 @@ def main():
 
     stocha = Q_Learning(True, TRAJECTORY_LENGTH, INITIAL_STATE, EPSILON, GAMMA)
     print("\nPolicy for stochastic domain:\n", translater_tuple_action(stocha.estimated_policy))
+    #print(pd.DataFrame(translater_tuple_action(stocha.estimated_policy)).to_latex())
     print("\nExpected return for stochastic domain:\n", stocha.function_j(5000))
+    #print(pd.DataFrame(stocha.function_j(5000)).to_latex())
 
     stocha.first_online_learning()
     stocha.second_online_learning()

@@ -18,7 +18,7 @@ REWARDS = np.matrix([
 ])
 ACTIONS_ALLOWED = [(1,0), (-1,0), (0,1), (0,-1)]
 TRANSLATION = {(1,0): "↓", (-1,0): "↑", (0,1): "→", (0,-1): "←"}
-GAMMA = 0.99
+GAMMA = 0.4
 N = 10000
 N_RUNS_STOCHASTIC = 10
 N_ITERATIONS = 19
